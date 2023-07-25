@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "GdKPDAwU/8VvUe1OVg8IGM9ga6roJ231Nb+UwXIFqte5aP4WdPRQ+5SDkzdx5XtjuHKWv/0lbVtQHQcvS1ePJQ==",
+  "success": true,
+  "projectFilePath": "/Users/keremsmacbook/Desktop/gitHub/Unbeatabale_tictactoe/Unbeatabale_tictactoe/Unbeatabale_tictactoe.csproj",
+  "expectedPackageFiles": [
+    "/Users/keremsmacbook/.nuget/packages/raylib-cs/4.5.0.2/raylib-cs.4.5.0.2.nupkg.sha512",
+    "/Users/keremsmacbook/.nuget/packages/system.numerics.vectors/4.5.0/system.numerics.vectors.4.5.0.nupkg.sha512"
+  ],
+  "logs": []
+}

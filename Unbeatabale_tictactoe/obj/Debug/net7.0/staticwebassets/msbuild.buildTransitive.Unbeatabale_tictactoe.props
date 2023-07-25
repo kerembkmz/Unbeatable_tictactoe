@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="../buildMultiTargeting/Unbeatabale_tictactoe.props" />
+</Project>
