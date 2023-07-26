@@ -13,6 +13,25 @@ namespace TicTacToe
         static int[,] board = new int[boardSize, boardSize];
         static int currentPlayer = 1; // 1 for player, 2 for bot
 
+        static List<int> allLegalMoves(int[,] currentBoard)
+        {
+            List<int> legalMoves = new List<int>();
+
+            for (int y = 0; y < boardSize; y++)
+            {
+                for (int x = 0; x < boardSize; x++)
+                {
+                    if (currentBoard[y, x] == 0)
+                    {
+                        int move = y * boardSize + x;
+                        legalMoves.Add(move);
+                    }
+                }
+            }
+
+            return legalMoves;
+        }
+
         public static void Main()
         {
             Vector2 loadedWindowSize = GetSavedWindowSize();
@@ -24,7 +43,10 @@ namespace TicTacToe
 
             while (!Raylib.WindowShouldClose())
             {
-                // Check for player's move with the mouse
+
+
+                List<int> dynamicBoard = allLegalMoves(board); 
+                //Player's move
                 if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON))
                 {
                     int mouseX = Raylib.GetMouseX();
@@ -43,10 +65,11 @@ namespace TicTacToe
                     }
                 }
 
-                // Check for bot's move
+                //Bot's move
                 if (currentPlayer == 2)
                 {
-                    int botMove = botThink();
+                    
+                    int botMove = botThink(dynamicBoard);
                     int botMoveX = botMove % boardSize;
                     int botMoveY = botMove / boardSize;
 
@@ -128,13 +151,14 @@ namespace TicTacToe
             File.WriteAllText(FileHelper.PrefsFilePath, isBigWindow ? "1" : "0");
         }
 
-        static int botThink()
+        static int botThink(List<int> legalMoves)
         {
-            // You can implement your bot's move strategy here.
-            // For now, it's just a random move.
             Random random = new Random();
-            int move = random.Next(boardSize);
+            int moveIndex = random.Next(legalMoves.Count);
+            int move = legalMoves[moveIndex];
             return move;
+
+
         }
 
     }
