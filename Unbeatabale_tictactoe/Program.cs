@@ -11,6 +11,7 @@ namespace TicTacToe
         static int cellSize = 100;
         static int scoreOfPlayer = 0;
         static int scoreOfBot = 0;
+        static int scoreOfDraw = 0;
         static bool resetGame = false;
 
         static int[,] board = new int[boardSize, boardSize];
@@ -51,9 +52,11 @@ namespace TicTacToe
             {
                 string playerScoreS = "Player Score: " + scoreOfPlayer;
                 string botScoreS = "Bot Score: " + scoreOfBot;
+                string drawScoreS = "Draws: " + scoreOfDraw;
 
-                Raylib.DrawText(playerScoreS, 50, 350, 20, Color.LIGHTGRAY);
-                Raylib.DrawText(botScoreS, 50, 380, 20, Color.LIGHTGRAY);
+                Raylib.DrawText(playerScoreS, 50, 360, 20, Color.GREEN);
+                Raylib.DrawText(botScoreS, 50, 380, 20, Color.RED);
+                Raylib.DrawText(drawScoreS, 50, 400, 20, Color.SKYBLUE);
 
                 if (boardIsDraw(board) || boardIsWon(board))
                 {
@@ -98,13 +101,16 @@ namespace TicTacToe
                             {
                                 scoreOfPlayer += 1;
                             }
-                            else if (determineWinner == 2) {
+                            else if (determineWinner == 2)
+                            {
                                 scoreOfBot += 1;
+                            }
+                            else if (determineWinner == 0) {
+                                scoreOfDraw += 1;
                             }
 
                             ResetBoard(board, boardSize);
 
-                            currentPlayer = 1; //Reset to player's move
                             resetGame = false;
                         }
                     }
@@ -119,7 +125,7 @@ namespace TicTacToe
 
                 else
                 {
-                    List<int> dynamicBoard = allLegalMoves(board);
+                    
                     // Check for player's move with the mouse
                     if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON))
                     {
@@ -140,18 +146,15 @@ namespace TicTacToe
                     }
 
                     // Check for bot's move
-                    if (currentPlayer == 2)
+                    if (currentPlayer == 2 && !boardIsDraw(board) && !boardIsWon(board)) //Added the Draw and Won functions here so that bot won't try an illegal move, and we wont get an out of index error.
                     {
+                     
+                        int bestMove = botThink(board);
+                        int botMoveX = bestMove % boardSize;
+                        int botMoveY = bestMove / boardSize;
 
-                        int botMove = botThink(dynamicBoard);
-                        int botMoveX = botMove % boardSize;
-                        int botMoveY = botMove / boardSize;
-
-                        if (board[botMoveY, botMoveX] == 0)
-                        {
-                            board[botMoveY, botMoveX] = currentPlayer;
-                            currentPlayer = (currentPlayer == 1) ? 2 : 1;
-                        }
+                        board[botMoveY, botMoveX] = 2;
+                        currentPlayer = 1;
                     }
                 }
 
@@ -219,23 +222,6 @@ namespace TicTacToe
                 }
             }
             return Settings.ScreenSizeSmall;
-        }
-
-        static void SaveWindowSize()
-        {
-            Directory.CreateDirectory(FileHelper.AppDataPath);
-            bool isBigWindow = Raylib.GetScreenWidth() > Settings.ScreenSizeSmall.X;
-            File.WriteAllText(FileHelper.PrefsFilePath, isBigWindow ? "1" : "0");
-        }
-
-        static int botThink(List<int> legalMoves)
-        {
-            Random random = new Random();
-            int moveIndex = random.Next(legalMoves.Count);
-            int move = legalMoves[moveIndex];
-            return move;
-
-
         }
 
         public static bool boardIsDraw(int[,] currentBoard)
@@ -340,5 +326,190 @@ namespace TicTacToe
                 }
             }
         }
+
+        static int botThink(int[,] currentBoard)
+        {
+            int bestMove = -1;
+            int bestScore = int.MinValue;
+            List<int> legalMoves = allLegalMoves(currentBoard);
+
+            foreach (int move in legalMoves)
+            {
+                int botMoveX = move % boardSize;
+                int botMoveY = move / boardSize;
+
+                // Simulate the move
+                currentBoard[botMoveY, botMoveX] = 2;
+
+                // Call the MiniMax function with Alpha-Beta Pruning to get the score
+                int score = MiniMax(currentBoard, 10, false, int.MinValue, int.MaxValue);
+
+                // Undo the move
+                currentBoard[botMoveY, botMoveX] = 0;
+
+                // If the current score is greater than the best score, update the best move and best score
+                if (score > bestScore)
+                {
+                    bestMove = move;
+                    bestScore = score;
+                }
+            }
+
+            return bestMove;
+        }
+
+        static int MiniMax(int[,] currentBoard, int depth, bool isMaximizing, int alpha, int beta)
+        {
+            
+            if (boardIsWon(currentBoard) || boardIsDraw(currentBoard) || depth == 0)
+            {
+            
+                return evaluateBoard(currentBoard, depth);
+            }
+
+            
+            if (isMaximizing)
+            {
+                int maxScore = int.MinValue; 
+
+                List<int> legalMoves = allLegalMoves(currentBoard);
+                foreach (int move in legalMoves)
+                {
+                    int botMoveX = move % boardSize;
+                    int botMoveY = move / boardSize;
+
+                    
+                    currentBoard[botMoveY, botMoveX] = 2;
+
+                    
+                    int score = MiniMax(currentBoard, depth - 1, false, alpha, beta);
+
+                    
+                    currentBoard[botMoveY, botMoveX] = 0;
+
+                    
+                    maxScore = Math.Max(maxScore, score);
+                    alpha = Math.Max(alpha, maxScore);
+
+                    
+                    if (beta <= alpha)
+                    {
+                        break;
+                    }
+                }
+
+                return alpha; 
+            }
+            else 
+            {
+                int minScore = int.MaxValue; 
+
+                List<int> legalMoves = allLegalMoves(currentBoard);
+                foreach (int move in legalMoves)
+                {
+                    int playerMoveX = move % boardSize;
+                    int playerMoveY = move / boardSize;
+
+                    
+                    currentBoard[playerMoveY, playerMoveX] = 1;
+
+                    
+                    int score = MiniMax(currentBoard, depth - 1, true, alpha, beta);
+
+                    
+                    currentBoard[playerMoveY, playerMoveX] = 0;
+
+                    
+                    minScore = Math.Min(minScore, score);
+                    beta = Math.Min(beta, minScore);
+
+                    
+                    if (beta <= alpha)
+                    {
+                        break;
+                    }
+                }
+
+                return beta; 
+            }
+        }
+
+
+
+        //https://stackoverflow.com/questions/35357419/tic-tac-toe-rate-a-board-algorithm
+        public static int evaluateBoard(int[,] board, int depth) {
+            int x1 = 0, x2 = 0, x3 = 0, o1 = 0, o2 = 0, o3 = 0;
+            //The following correspond to
+            // x1 -> number of rowns with N x's and no o's.
+            // x2 -> number of columns with N x's and no o's.
+            // x3 -> number of diagonals with N x's and no o's.
+            // o1 -> number of rowns with N o's and no x's.
+            // o2 -> number of columns with N o's and no x's.
+            // o3 -> number of diagonals with N o's and no x's.
+
+            int N = 3; //board is 3x3
+
+            for (int i = 0; i < N; i++)
+            {
+                int rowXCount = 0, rowOCount = 0;
+                int colXCount = 0, colOCount = 0;
+
+                for (int j = 0; j < N; j++)
+                {
+                    if (board[i, j] == 1) 
+                        rowXCount++;
+                    else if (board[i, j] == 2) 
+                        rowOCount++;
+
+                    if (board[j, i] == 1)
+                        colXCount++;
+                    else if (board[j, i] == 2)
+                        colOCount++;
+                }
+
+                if (rowXCount == N && rowOCount == 0)
+                    x1++;
+                if (colXCount == N && colOCount == 0)
+                    x2++;
+
+                if (rowOCount == N && rowXCount == 0)
+                    o1++;
+                if (colOCount == N && colXCount == 0)
+                    o2++;
+            }
+
+            
+            int diag1XCount = 0, diag1OCount = 0;
+            int diag2XCount = 0, diag2OCount = 0;
+
+            for (int i = 0; i < N; i++)
+            {
+                if (board[i, i] == 1)
+                    diag1XCount++;
+                else if (board[i, i] == 2)
+                    diag1OCount++;
+
+                if (board[i, N - 1 - i] == 1)
+                    diag2XCount++;
+                else if (board[i, N - 1 - i] == 2)
+                    diag2OCount++;
+            }
+
+            if (diag1XCount == N && diag1OCount == 0)
+                x3++;
+            if (diag2XCount == N && diag2OCount == 0)
+                x3++;
+
+            if (diag1OCount == N && diag1XCount == 0)
+                o3++;
+            if (diag2OCount == N && diag2XCount == 0)
+                o3++;
+
+            int score = (10 * o3 + 3 * o2 + o1) - (10 * x3 + 3 * x2 + x1); // We should change the original pointing system to the opposite, since in our case, bot is playing O.
+
+            return score;
+        }
+
     }
-}
+
+    }
