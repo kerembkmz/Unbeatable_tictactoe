@@ -46,8 +46,6 @@ namespace TicTacToe
             Raylib.InitWindow(screenW, screenH, "Tic Tac Toe Game");
             Raylib.SetTargetFPS(60);
 
-            Raylib.DrawRectangle(300, 300, 150, 50, Color.GRAY);
-            Raylib.DrawText("Reset Game", 115, 310, 20, Color.WHITE);
 
             while (!Raylib.WindowShouldClose())
             {
@@ -66,18 +64,14 @@ namespace TicTacToe
                     }
                     else
                     {
-                        if (currentPlayer == 1)
+                        int det2 = boardIsWonBy(board);
+                        if (det2 == 1)
                         {
-
-                            // scoreOfPlayer += 1; is not working, starts to increase non-stop
-                            scoreOfPlayer = incrementScoreByOne(scoreOfPlayer);
+                            resultText = "Game is won by player";
                         }
-                        else if (currentPlayer == 2)
-                        {
-                            scoreOfBot = incrementScoreByOne(scoreOfBot);
+                        else if (det2 == 2) {
+                            resultText = "Game is won by bot";
                         }
-
-                        resultText = "Game is won by:" + currentPlayer;
                     }
 
                     if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON))
@@ -99,8 +93,18 @@ namespace TicTacToe
 
                         if (resetGame)
                         {
+                            int determineWinner = boardIsWonBy(board);
+                            if (determineWinner == 1)
+                            {
+                                scoreOfPlayer += 1;
+                            }
+                            else if (determineWinner == 2) {
+                                scoreOfBot += 1;
+                            }
+
                             ResetBoard(board, boardSize);
-                            currentPlayer = 1; // Reset to the starting player 
+
+                            currentPlayer = 1; //Reset to player's move
                             resetGame = false;
                         }
                     }
@@ -153,7 +157,11 @@ namespace TicTacToe
 
 
                 Raylib.BeginDrawing();
+
                 Raylib.ClearBackground(new Color(22, 22, 22, 255));
+
+                Raylib.DrawRectangle(300, 300, 150, 50, Color.GRAY);
+                Raylib.DrawText("Reset Game", 320, 310, 20, Color.WHITE);
 
                 DrawBoard();
 
@@ -286,6 +294,42 @@ namespace TicTacToe
             return false;
         }
 
+        public static int boardIsWonBy(int[,] currentBoard)
+        {
+            // Rows check
+            for (int row = 0; row < 3; row++)
+            {
+                if (currentBoard[row, 0] != 0 && currentBoard[row, 0] == currentBoard[row, 1] && currentBoard[row, 1] == currentBoard[row, 2])
+                {
+                    return currentBoard[row, 0]; // Return the winning player number (1 or 2)
+                }
+            }
+
+            // Columns check
+            for (int col = 0; col < 3; col++)
+            {
+                if (currentBoard[0, col] != 0 && currentBoard[0, col] == currentBoard[1, col] && currentBoard[1, col] == currentBoard[2, col])
+                {
+                    return currentBoard[0, col]; // Return the winning player number (1 or 2)
+                }
+            }
+
+            // Main diagonal check
+            if (currentBoard[0, 0] != 0 && currentBoard[0, 0] == currentBoard[1, 1] && currentBoard[1, 1] == currentBoard[2, 2])
+            {
+                return currentBoard[0, 0]; // Return the winning player number (1 or 2)
+            }
+
+            // Anti-diagonal check
+            if (currentBoard[0, 2] != 0 && currentBoard[0, 2] == currentBoard[1, 1] && currentBoard[1, 1] == currentBoard[2, 0])
+            {
+                return currentBoard[0, 2]; // Return the winning player number (1 or 2)
+            }
+
+            // If no winning condition is met, return 0 ~ draw
+            return 0;
+        }
+
         public static void ResetBoard(int[,] board, int boardSize)
         {
             for (int y = 0; y < boardSize; y++)
@@ -296,10 +340,5 @@ namespace TicTacToe
                 }
             }
         }
-
-        public static int incrementScoreByOne(int k) {
-            return k + 1;
-        }
-        
     }
 }
